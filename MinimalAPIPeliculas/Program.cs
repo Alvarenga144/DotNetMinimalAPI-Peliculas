@@ -56,7 +56,7 @@ app.MapGet("/generos", async (IRepositorioGeneros repositorio) =>
     return await repositorio.ObtenerTodos();
 }).CacheOutput(c => c.Expire(TimeSpan.FromSeconds(30)).Tag("generos-get")); // Para cachear con tiempo
 
-app.MapGet("/generos/{id:int}", async(IRepositorioGeneros repositorio, int id) =>
+app.MapGet("/generos/{id:int}", async (IRepositorioGeneros repositorio, int id) =>
 {
     var genero = await repositorio.ObtenerPorId(id);
 
@@ -68,12 +68,40 @@ app.MapGet("/generos/{id:int}", async(IRepositorioGeneros repositorio, int id) =
     return Results.Ok(genero);
 });
 
-app.MapPost("/generos", async (Genero genero, IRepositorioGeneros repositorio, 
+app.MapPost("/generos", async (Genero genero, IRepositorioGeneros repositorio,
     IOutputCacheStore outputCacheStore) =>
 {
     var id = await repositorio.Crear(genero);
     await outputCacheStore.EvictByTagAsync("generos-get", default);
     return Results.Created($"/generos/{id}", genero);
+});
+
+app.MapPut("/generos/{id:int}", async (int id, Genero genero, IRepositorioGeneros repositorio, IOutputCacheStore outputCacheStore) =>
+{
+    var existe = await repositorio.Existe(id);
+
+    if (!existe)
+    {
+        return Results.NotFound();
+    }
+
+    await repositorio.Actualizar(genero);
+    await outputCacheStore.EvictByTagAsync("generos-get", default);
+    return Results.NoContent();
+});
+
+app.MapDelete("/generos/{id:int}", async (int id, IRepositorioGeneros repositorio, IOutputCacheStore outputCacheStore) =>
+{
+    var existe = await repositorio.Existe(id);
+
+    if (!existe)
+    {
+        return Results.NotFound();
+    }
+
+    await repositorio.Borrar(id);
+    await outputCacheStore.EvictByTagAsync("generos-get", default);
+    return Results.NoContent();
 });
 
 // Fin de area de los middlewares
