@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.EntityFrameworkCore;
 using MinimalAPIPeliculas;
 using MinimalAPIPeliculas.Entidades;
+using MinimalAPIPeliculas.Repositorios;
 
 var builder = WebApplication.CreateBuilder(args);
 var origenesPermitidos = builder.Configuration.GetValue<string>("OrigenesPermitidos")!;
@@ -27,6 +28,8 @@ builder.Services.AddCors(opciones =>
 builder.Services.AddOutputCache();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<IRepositorioGeneros, RepositorioGeneros>();
 
 // Fin de area de los servicios entre builder y var app
 
@@ -70,6 +73,12 @@ app.MapGet("/generos", () =>
 
     return generos;
 }).CacheOutput(c => c.Expire(TimeSpan.FromSeconds(15))); // Para cachear con tiempo
+
+app.MapPost("/generos", async (Genero genero, IRepositorioGeneros repositorio) =>
+{
+    var id = await repositorio.Crear(genero);
+    return Results.Created($"/generos/{id}", genero);
+});
 
 // Fin de area de los middlewares
 
