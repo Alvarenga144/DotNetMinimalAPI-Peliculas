@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using MinimalAPIPeliculas;
 using MinimalAPIPeliculas.Entidades;
@@ -53,7 +54,7 @@ app.MapGet("/", [EnableCors(policyName: "libre")] () => "¡Hola, mundo!");
 app.MapGet("/generos", async (IRepositorioGeneros repositorio) =>
 {
     return await repositorio.ObtenerTodos();
-}).CacheOutput(c => c.Expire(TimeSpan.FromSeconds(15))); // Para cachear con tiempo
+}).CacheOutput(c => c.Expire(TimeSpan.FromSeconds(30)).Tag("generos-get")); // Para cachear con tiempo
 
 app.MapGet("/generos/{id:int}", async(IRepositorioGeneros repositorio, int id) =>
 {
@@ -67,9 +68,11 @@ app.MapGet("/generos/{id:int}", async(IRepositorioGeneros repositorio, int id) =
     return Results.Ok(genero);
 });
 
-app.MapPost("/generos", async (Genero genero, IRepositorioGeneros repositorio) =>
+app.MapPost("/generos", async (Genero genero, IRepositorioGeneros repositorio, 
+    IOutputCacheStore outputCacheStore) =>
 {
     var id = await repositorio.Crear(genero);
+    await outputCacheStore.EvictByTagAsync("generos-get", default);
     return Results.Created($"/generos/{id}", genero);
 });
 
