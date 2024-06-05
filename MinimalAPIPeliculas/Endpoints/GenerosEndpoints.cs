@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.OutputCaching;
+using MinimalAPIPeliculas.DTOs;
 using MinimalAPIPeliculas.Entidades;
 using MinimalAPIPeliculas.Repositorios;
 
@@ -19,13 +20,14 @@ namespace MinimalAPIPeliculas.Endpoints
             return group;
         }
 
-        static async Task<Ok<List<Genero>>> ObtenerGeneros(IRepositorioGeneros repositorio)
+        static async Task<Ok<List<GeneroDTO>>> ObtenerGeneros(IRepositorioGeneros repositorio)
         {
             var generos = await repositorio.ObtenerTodos();
-            return TypedResults.Ok(generos);
+            var generosDTO = generos.Select(x => new GeneroDTO { Id = x.Id, Nombre = x.Nombre }).ToList();
+            return TypedResults.Ok(generosDTO);
         }
 
-        static async Task<Results<Ok<Genero>, NotFound>> ObtenerGeneroPorId(IRepositorioGeneros repositorio, int id)
+        static async Task<Results<Ok<GeneroDTO>, NotFound>> ObtenerGeneroPorId(IRepositorioGeneros repositorio, int id)
         {
             var genero = await repositorio.ObtenerPorId(id);
 
@@ -34,18 +36,36 @@ namespace MinimalAPIPeliculas.Endpoints
                 return TypedResults.NotFound();
             }
 
-            return TypedResults.Ok(genero);
+            var generoDTO = new GeneroDTO
+            {
+                Id = id,
+                Nombre = genero.Nombre,
+            };
+
+            return TypedResults.Ok(generoDTO);
         }
 
-        static async Task<Created<Genero>> CrearGenero(Genero genero, IRepositorioGeneros repositorio,
+        static async Task<Created<GeneroDTO>> CrearGenero(CrearGeneroDTO crearGeneroDTO, IRepositorioGeneros repositorio,
             IOutputCacheStore outputCacheStore)
         {
+            var genero = new Genero
+            {
+                Nombre = crearGeneroDTO.Nombre
+            };
+
             var id = await repositorio.Crear(genero);
             await outputCacheStore.EvictByTagAsync("generos-get", default);
-            return TypedResults.Created($"/generos/{id}", genero);
+
+            var generoDTO = new GeneroDTO
+            {
+                Id = id,
+                Nombre = genero.Nombre,
+            };
+
+            return TypedResults.Created($"/generos/{id}", generoDTO);
         }
 
-        static async Task<Results<NoContent, NotFound>> ActualizarGenero(int id, Genero genero, IRepositorioGeneros repositorio, IOutputCacheStore outputCacheStore)
+        static async Task<Results<NoContent, NotFound>> ActualizarGenero(int id, CrearGeneroDTO crearGeneroDTO, IRepositorioGeneros repositorio, IOutputCacheStore outputCacheStore)
         {
             var existe = await repositorio.Existe(id);
 
@@ -53,6 +73,12 @@ namespace MinimalAPIPeliculas.Endpoints
             {
                 return TypedResults.NotFound();
             }
+
+            var genero = new Genero
+            {
+                Id = id,
+                Nombre = crearGeneroDTO.Nombre
+            };
 
             await repositorio.Actualizar(genero);
             await outputCacheStore.EvictByTagAsync("generos-get", default);
