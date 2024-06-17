@@ -30,6 +30,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IRepositorioGeneros, RepositorioGeneros>();
+builder.Services.AddScoped<IRepositorioActores, RepositorioActores>();
+
 builder.Services.AddAutoMapper(typeof(Program));
 
 // Fin de area de los servicios entre builder y var app
