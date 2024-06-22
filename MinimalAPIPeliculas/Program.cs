@@ -54,6 +54,7 @@ app.UseOutputCache();
 app.MapGet("/", [EnableCors(policyName: "libre")] () => "¡Hola, mundo!");
 
 app.MapGroup("/generos").MapGeneros();
+app.MapGroup("/actores").MapActores();
 
 // Fin de area de los middlewares
 

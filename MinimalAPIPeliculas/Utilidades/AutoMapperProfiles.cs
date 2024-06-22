@@ -10,7 +10,12 @@ namespace MinimalAPIPeliculas.Utilidades
         public AutoMapperProfiles() 
         {
             CreateMap<CrearGeneroDTO, Genero>();
-            CreateMap<Genero, CrearGeneroDTO>();
+            CreateMap<Genero, GeneroDTO>();
+
+            CreateMap<CrearActorDTO, Actor>()
+                .ForMember(x => x.Foto, opciones => opciones.Ignore());
+                // Para ignorar mapear la el tipo de foto IForm to string
+            CreateMap<Actor, ActorDTO>();
         }
     }
 }
