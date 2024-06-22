@@ -34,6 +34,7 @@ builder.Services.AddScoped<IRepositorioGeneros, RepositorioGeneros>();
 builder.Services.AddScoped<IRepositorioActores, RepositorioActores>();
 
 builder.Services.AddScoped<IAlmacenadorArchivos, AlmacenadorArchivosAzure>();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(Program));
 
@@ -41,15 +42,15 @@ builder.Services.AddAutoMapper(typeof(Program));
 
 var app = builder.Build();
 
-// Inicio de area de los middlewares
-
 //if (builder.Environment.IsDevelopment())
 // {
 // }
 
+// Inicio de area de los middlewares
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseStaticFiles();
 app.UseCors();
 
 app.UseOutputCache();
