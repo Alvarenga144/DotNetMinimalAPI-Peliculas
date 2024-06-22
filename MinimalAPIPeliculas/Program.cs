@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MinimalAPIPeliculas;
 using MinimalAPIPeliculas.Endpoints;
 using MinimalAPIPeliculas.Repositorios;
+using MinimalAPIPeliculas.Servicios;
 
 var builder = WebApplication.CreateBuilder(args);
 var origenesPermitidos = builder.Configuration.GetValue<string>("OrigenesPermitidos")!;
@@ -31,6 +32,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IRepositorioGeneros, RepositorioGeneros>();
 builder.Services.AddScoped<IRepositorioActores, RepositorioActores>();
+
+builder.Services.AddScoped<IAlmacenadorArchivos, AlmacenadorArchivosAzure>();
 
 builder.Services.AddAutoMapper(typeof(Program));
 
