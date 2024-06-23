@@ -22,6 +22,14 @@ namespace MinimalAPIPeliculas.Repositorios
             return await _dbContext.Actores.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id);
         }
 
+        public async Task<List<Actor>> ObtenerPorNombre(string nombre)
+        {
+            return await _dbContext.Actores
+                .Where(a => a.Nombre.Contains(nombre))
+                .OrderBy(a => a.Nombre)
+                .ToListAsync();
+        }
+
         public async Task<int> Crear(Actor actor)
         {
             _dbContext.Add(actor);
