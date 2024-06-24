@@ -28,7 +28,14 @@ namespace MinimalAPIPeliculas.Repositorios
 
         public async Task<Pelicula?> ObtenerPorId(int id)
         {
-            return await context.Pelicula.Include(p => p.Comentarios).AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
+            return await context.Pelicula
+                .Include(p => p.Comentarios)
+                .Include(p => p.GenerosPeliculas)
+                    .ThenInclude(gp => gp.Genero)
+                .Include(p => p.ActoresPeliculas.OrderBy(a => a.Orden))
+                    .ThenInclude(gp => gp.Actor)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task<int> Crear(Pelicula pelicula)
@@ -68,6 +75,25 @@ namespace MinimalAPIPeliculas.Repositorios
             var generosPeliculas = generosIds.Select(generoId => new GeneroPelicula() { GeneroId = generoId });
 
             pelicula.GenerosPeliculas = mapper.Map(generosPeliculas, pelicula.GenerosPeliculas);
+            await context.SaveChangesAsync();
+        }
+
+        public async Task AsignarActores(int id, List<ActorPelicula> actores)
+        {
+            for (int i = 1; i < actores.Count; i++)
+            {
+                actores[i - 1].Orden = i;
+            }
+
+            var pelicula = await context.Pelicula.Include(p => p.ActoresPeliculas).FirstOrDefaultAsync(p => p.Id == id);
+
+            if (pelicula is null)
+            {
+                throw new ArgumentException($"No existe la pelicula con id: {id}");
+            }
+
+            pelicula.ActoresPeliculas = mapper.Map(actores, pelicula.ActoresPeliculas);
+
             await context.SaveChangesAsync();
         }
     }
