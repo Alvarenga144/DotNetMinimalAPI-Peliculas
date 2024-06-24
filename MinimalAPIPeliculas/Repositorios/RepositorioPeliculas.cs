@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using MinimalAPIPeliculas.DTOs;
 using MinimalAPIPeliculas.Entidades;
 using MinimalAPIPeliculas.Utilidades;
@@ -8,11 +9,13 @@ namespace MinimalAPIPeliculas.Repositorios
     public class RepositorioPeliculas : IRepositorioPeliculas
     {
         private readonly ApplicationDBContext context;
+        private readonly IMapper mapper;
         private readonly HttpContext httpContext;
 
-        public RepositorioPeliculas(ApplicationDBContext context, IHttpContextAccessor httpContextAccessor)
+        public RepositorioPeliculas(ApplicationDBContext context, IHttpContextAccessor httpContextAccessor, IMapper mapper)
         {
             this.context = context;
+            this.mapper = mapper;
             httpContext = httpContextAccessor.HttpContext!;
         }
 
@@ -49,6 +52,23 @@ namespace MinimalAPIPeliculas.Repositorios
         public async Task<bool> Existe(int id)
         {
             return await context.Pelicula.AnyAsync(p => p.Id == id);
+        }
+
+        public async Task AsignarGeneros(int id, List<int> generosIds)
+        {
+            var pelicula = await context.Pelicula
+                .Include(p => p.GenerosPeliculas)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (pelicula is null)
+            {
+                throw new ArgumentException($"No existe una pelicula con el id {id}");
+            }
+
+            var generosPeliculas = generosIds.Select(generoId => new GeneroPelicula() { GeneroId = generoId });
+
+            pelicula.GenerosPeliculas = mapper.Map(generosPeliculas, pelicula.GenerosPeliculas);
+            await context.SaveChangesAsync();
         }
     }
 }
