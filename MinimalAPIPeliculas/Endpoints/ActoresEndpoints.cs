@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
-using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using MinimalAPIPeliculas.DTOs;
 using MinimalAPIPeliculas.Entidades;
+using MinimalAPIPeliculas.Filtros;
 using MinimalAPIPeliculas.Repositorios;
 using MinimalAPIPeliculas.Servicios;
 
@@ -19,8 +19,8 @@ namespace MinimalAPIPeliculas.Endpoints
             group.MapGet("/", ObtenerTodos).CacheOutput(c => c.Expire(TimeSpan.FromSeconds(30)).Tag("actores-get"));
             group.MapGet("/{id:int}", ObtenerPorId);
             group.MapGet("obtenerPorNombre/{nombre}", ObtenerPorNombre);
-            group.MapPost("/", Crear).DisableAntiforgery();
-            group.MapPut("/{id:int}", Actualizar).DisableAntiforgery();
+            group.MapPost("/", Crear).DisableAntiforgery().AddEndpointFilter<FiltroValidaciones<CrearActorDTO>>();
+            group.MapPut("/{id:int}", Actualizar).DisableAntiforgery().AddEndpointFilter<FiltroValidaciones<CrearActorDTO>>();
             group.MapDelete("/{id:int}", Borrar);
             return group;
         }
@@ -53,15 +53,8 @@ namespace MinimalAPIPeliculas.Endpoints
             return TypedResults.Ok(actoresDTO);
         }
 
-        static async Task<Results<Created<ActorDTO>, ValidationProblem>> Crear([FromForm] CrearActorDTO crearActorDTO, IRepositorioActores repositorio, IOutputCacheStore outputCacheStore, IMapper mapper, IAlmacenadorArchivos almacenadorArchivos, IValidator<CrearActorDTO> validador)
+        static async Task<Results<Created<ActorDTO>, ValidationProblem>> Crear([FromForm] CrearActorDTO crearActorDTO, IRepositorioActores repositorio, IOutputCacheStore outputCacheStore, IMapper mapper, IAlmacenadorArchivos almacenadorArchivos)
         {
-            var resultadoValidacion = await validador.ValidateAsync(crearActorDTO);
-
-            if (!resultadoValidacion.IsValid)
-            {
-                return TypedResults.ValidationProblem(resultadoValidacion.ToDictionary());
-            }
-
             var actor = mapper.Map<Actor>(crearActorDTO);
 
             if (crearActorDTO.Foto is not null)
