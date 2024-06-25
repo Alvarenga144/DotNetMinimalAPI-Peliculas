@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.OutputCaching;
 using MinimalAPIPeliculas.DTOs;
@@ -42,8 +43,15 @@ namespace MinimalAPIPeliculas.Endpoints
             return TypedResults.Ok(generoDTO);
         }
 
-        static async Task<Created<GeneroDTO>> CrearGenero(CrearGeneroDTO crearGeneroDTO, IRepositorioGeneros repositorio, IOutputCacheStore outputCacheStore, IMapper mapper)
+        static async Task<Results<Created<GeneroDTO>, ValidationProblem>> CrearGenero(CrearGeneroDTO crearGeneroDTO, IRepositorioGeneros repositorio, IOutputCacheStore outputCacheStore, IMapper mapper, IValidator<CrearGeneroDTO> validador)
         {
+            var resultadoValidacion = await validador.ValidateAsync(crearGeneroDTO);
+
+            if (!resultadoValidacion.IsValid)
+            {
+                return TypedResults.ValidationProblem(resultadoValidacion.ToDictionary());
+            }
+
             var genero = mapper.Map<Genero>(crearGeneroDTO);
             var id = await repositorio.Crear(genero);
             await outputCacheStore.EvictByTagAsync("generos-get", default);
@@ -52,8 +60,15 @@ namespace MinimalAPIPeliculas.Endpoints
             return TypedResults.Created($"/generos/{id}", generoDTO);
         }
 
-        static async Task<Results<NoContent, NotFound>> ActualizarGenero(int id, CrearGeneroDTO crearGeneroDTO, IRepositorioGeneros repositorio, IOutputCacheStore outputCacheStore, IMapper mapper)
+        static async Task<Results<NoContent, NotFound, ValidationProblem>> ActualizarGenero(int id, CrearGeneroDTO crearGeneroDTO, IRepositorioGeneros repositorio, IOutputCacheStore outputCacheStore, IMapper mapper, IValidator<CrearGeneroDTO> validador)
         {
+            var resultadoValidacion = await validador.ValidateAsync(crearGeneroDTO);
+
+            if (!resultadoValidacion.IsValid)
+            {
+                return TypedResults.ValidationProblem(resultadoValidacion.ToDictionary());
+            }
+
             var existe = await repositorio.Existe(id);
 
             if (!existe)

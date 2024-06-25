@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.EntityFrameworkCore;
 using MinimalAPIPeliculas;
@@ -39,6 +40,8 @@ builder.Services.AddScoped<IAlmacenadorArchivos, AlmacenadorArchivosAzure>();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAutoMapper(typeof(Program));
+
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Fin de area de los servicios entre builder y var app
 
